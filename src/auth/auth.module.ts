@@ -9,11 +9,17 @@ import { AuthGuard } from './guards/authGuard';
 import { GoogleOAuth } from './utils/GoogleOAuth';
 import { MongooseModule } from '@nestjs/mongoose';
 import { emailModule } from 'src/email/email.module';
+import { configModule } from 'src/config/config.module';
+import { Config, ConfigSchema } from 'src/config/entities/config.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Config.name, schema: ConfigSchema },
+    ]),
     ConfigModule,
+    forwardRef(() => configModule),
     forwardRef(() => emailModule),
   ],
   controllers: [authController],

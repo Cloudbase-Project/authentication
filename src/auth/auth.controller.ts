@@ -7,6 +7,7 @@ import {
   ValidationPipe,
   Logger,
   Query,
+  Param,
 } from '@nestjs/common';
 import { ValidationException } from '../utils/exception/ValidationException';
 import { ApiBody } from '@nestjs/swagger';
@@ -26,7 +27,7 @@ export class authController {
     return 'hello world';
   }
 
-  @Post('/register') // route
+  @Post('/:projectId/register') // route
   @HttpCode(201) // Return type
   registerUser(
     @Body(
@@ -37,11 +38,12 @@ export class authController {
       }),
     )
     registerUserDTO: registerUserDTO,
+    @Param('projectId') projectId: string,
   ) {
-    return this.authService.registerUser(registerUserDTO);
+    return this.authService.registerUser(projectId, registerUserDTO);
   }
 
-  @Post('/login') // route
+  @Post('/:projectId/login') // route
   @HttpCode(200) // Return type
   loginUser(
     @Body(
@@ -52,8 +54,9 @@ export class authController {
       }),
     )
     loginUserDTO: loginUserDTO,
+    @Param('projectId') projectId: string,
   ) {
-    return this.authService.loginUser(loginUserDTO);
+    return this.authService.loginUser(projectId, loginUserDTO);
   }
 
   @Post('/verifyEmail') // route
@@ -62,7 +65,7 @@ export class authController {
     return this.authService.verifyUserRegistration(token);
   }
 
-  @Post('/googleLogin') // route
+  @Post('/:projectId/googleLogin') // route
   @HttpCode(200) // Return type
   loginWithGoogle(
     @Body(
@@ -73,7 +76,8 @@ export class authController {
       }),
     )
     googleLoginDTO: googleLoginDTO,
+    @Param('projectId') projectId: string,
   ) {
-    return this.authService.loginWithGoogle(googleLoginDTO);
+    return this.authService.loginWithGoogle(projectId, googleLoginDTO);
   }
 }

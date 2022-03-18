@@ -29,7 +29,7 @@ export class configController {
     @Inject(REQUEST) private readonly req: Request,
   ) {}
 
-  @Get('/users/:projectId') // route
+  @Get('/:projectId/users') // route
   @ApiHeader({ name: 'Authorization', required: true })
   @UseGuards(OwnerGuard)
   @HttpCode(200) // Return type

@@ -13,6 +13,7 @@ import { JWT } from './utils/token';
 import { GoogleOAuth } from './utils/GoogleOAuth';
 import { Model } from 'mongoose';
 import { EmailWorker } from 'src/email/email.service';
+import { ConfigDocument } from 'src/config/entities/config.entity';
 
 @Injectable()
 export class authService {
@@ -21,14 +22,27 @@ export class authService {
   constructor(
     @InjectModel('User')
     private readonly userModel: Model<UserDocument>,
+    @InjectModel('Config')
+    private readonly configModel: Model<ConfigDocument>,
     public Password: Password,
     public Token: JWT,
     public GoogleOAuth: GoogleOAuth,
     public EmailWorker: EmailWorker,
   ) {}
 
-  async registerUser(registerUserDTO: registerUserDTO) {
+  async registerUser(projectId: string, registerUserDTO: registerUserDTO) {
     const { name, email, password } = registerUserDTO;
+
+    const config = await this.configModel.findOne({ projectId: projectId });
+    if (!config) {
+      throw new ApplicationException('Invalid Project Id', 400);
+    }
+    if (!config.enabled) {
+      throw new ApplicationException(
+        'Cannot perform this action right now',
+        400,
+      );
+    }
 
     const existingUser = await this.userModel.findOne({ email: email });
     if (existingUser) {
@@ -42,24 +56,38 @@ export class authService {
       email: email,
       password: hashedPassword,
       registeredVia: 'credentials',
+      projectId: projectId,
     });
 
     // TODO: send verification email
     this.EmailWorker.sendVerificationEmail({
       email: user.email,
       id: user.id,
+      projectId,
     }).then();
 
-    const token = this.Token.newToken<JWTPayload>({
+    const token = this.Token.newToken<JWTPayload & { projectId: string }>({
       email: email,
       id: user.id,
+      projectId: projectId,
     });
 
     return { user, token };
   }
 
-  async loginUser(loginUserDTO: loginUserDTO) {
+  async loginUser(projectId: string, loginUserDTO: loginUserDTO) {
     const { email, password } = loginUserDTO;
+
+    const config = await this.configModel.findOne({ projectId: projectId });
+    if (!config) {
+      throw new ApplicationException('Invalid Project Id', 400);
+    }
+    if (!config.enabled) {
+      throw new ApplicationException(
+        'Cannot perform this action right now',
+        400,
+      );
+    }
 
     const existingUser = await this.userModel.findOne({ email: email });
     if (!existingUser) {
@@ -71,15 +99,30 @@ export class authService {
       throw new ApplicationException('Invalid Credentials', 400);
     }
 
-    const token = this.Token.newToken({ email: email, id: existingUser.id });
+    const token = this.Token.newToken({
+      email: email,
+      id: existingUser.id,
+      projectId: projectId,
+    });
 
     return { user: existingUser, token };
   }
 
   async verifyUserRegistration(token: string) {
-    const { id, fromEmail } = this.Token.verifyToken<
-      JWTPayload & { fromEmail: boolean }
+    const { id, fromEmail, projectId } = this.Token.verifyToken<
+      JWTPayload & { fromEmail: boolean; projectId: string }
     >(token);
+
+    const config = await this.configModel.findOne({ projectId: projectId });
+    if (!config) {
+      throw new ApplicationException('Invalid Project Id', 400);
+    }
+    if (!config.enabled) {
+      throw new ApplicationException(
+        'Cannot perform this action right now',
+        400,
+      );
+    }
 
     if (!fromEmail) {
       throw new ApplicationException('Invalid token', 400);
@@ -91,11 +134,26 @@ export class authService {
 
     existingUser.emailVerified = true;
     await existingUser.save();
-    const newToken = this.Token.newToken({ email: existingUser.email, id: id });
+    const newToken = this.Token.newToken({
+      email: existingUser.email,
+      id: id,
+      projectId,
+    });
     return { token: newToken, message: 'Email verified successfully' };
   }
 
-  async loginWithGoogle(googleLoginDTO: googleLoginDTO) {
+  async loginWithGoogle(projectId: string, googleLoginDTO: googleLoginDTO) {
+    const config = await this.configModel.findOne({ projectId: projectId });
+    if (!config) {
+      throw new ApplicationException('Invalid Project Id', 400);
+    }
+    if (!config.enabled) {
+      throw new ApplicationException(
+        'Cannot perform this action right now',
+        400,
+      );
+    }
+
     const { email, idToken } = googleLoginDTO;
     const payload = await this.GoogleOAuth.verifyGoogleIdToken(idToken);
 
@@ -118,6 +176,7 @@ export class authService {
         this.EmailWorker.sendVerificationEmail({
           email: newUser.email,
           id: newUser.id,
+          projectId,
         }).then();
         sendMail = true;
       }
@@ -126,6 +185,7 @@ export class authService {
     const token = this.Token.newToken({
       email: payload.email,
       id: newUser ? newUser.id : existingUser.id,
+      projectId,
     });
 
     console.log(payload);

@@ -20,12 +20,21 @@ export class EmailWorker {
     });
   }
 
-  async sendVerificationEmail({ email, id }: { email: string; id: string }) {
+  async sendVerificationEmail({
+    email,
+    id,
+    projectId,
+  }: {
+    email: string;
+    id: string;
+    projectId: string;
+  }) {
     const token = this.Jwt.newToken<{
       email: string;
       id: string;
       fromEmail: boolean;
-    }>({ email: email, id, fromEmail: true }, { expiresIn: '24h' });
+      projectId: string;
+    }>({ email: email, id, fromEmail: true, projectId }, { expiresIn: '24h' });
 
     return this.transporter.sendMail({
       from: process.env.SENDER_EMAIL,
@@ -40,12 +49,21 @@ export class EmailWorker {
     });
   }
 
-  async sendResetPasswordEmail({ email, id }: { email: string; id: string }) {
+  async sendResetPasswordEmail({
+    email,
+    id,
+    projectId,
+  }: {
+    email: string;
+    id: string;
+    projectId: string;
+  }) {
     const token = this.Jwt.newToken<{
       email: string;
       id: string;
       fromEmail: boolean;
-    }>({ email: email, id, fromEmail: true }, { expiresIn: '24h' });
+      projectId: string;
+    }>({ email: email, id, fromEmail: true, projectId }, { expiresIn: '24h' });
 
     return this.transporter.sendMail({
       from: process.env.SENDER_EMAIL,
