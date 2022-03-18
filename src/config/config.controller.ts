@@ -7,12 +7,17 @@ import {
   Inject,
   Param,
   Query,
+  Post,
+  Body,
+  ValidationPipe,
 } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { ApiHeader } from '@nestjs/swagger';
 import { OwnerGuard } from './guards/ownerGuard';
 import { configService } from './config.service';
+import { createConfigDTO } from './dtos/createConfig.dto';
+import { ValidationException } from 'src/utils/exception/ValidationException';
 
 // @ApiHeader({ name: 'Authorization', required: true })
 @Controller('config')
@@ -39,5 +44,20 @@ export class configController {
       per_page,
       page,
     );
+  }
+
+  @Post('/')
+  @HttpCode(201)
+  createConfig(
+    @Body(
+      new ValidationPipe({
+        exceptionFactory: ValidationException.throwValidationException,
+        forbidNonWhitelisted: true, // Add validation options here.
+        whitelist: true,
+      }),
+    )
+    createConfigDTO: createConfigDTO,
+  ) {
+    return this.configService.createConfig(createConfigDTO);
   }
 }
