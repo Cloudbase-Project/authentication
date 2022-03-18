@@ -12,6 +12,7 @@ import { Database, Resource } from '@adminjs/mongoose';
 import { getModelToken, MongooseModule } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './user/entities/user.entity';
+import { configModule } from './config/config.module';
 
 console.log('AdminJSMongoose : ', Database, Resource);
 
@@ -45,6 +46,7 @@ AdminJS.registerAdapter({ Database, Resource });
 
     userModule, // your resource
     authModule,
+    configModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],
