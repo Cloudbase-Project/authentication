@@ -6,6 +6,9 @@ declare global {
       //   currentUser?: User;
       email?: string;
       id?: string;
+      ownerEmail?: string;
+      ownerId?: string;
+      isOwner?: boolean;
     }
   }
 }

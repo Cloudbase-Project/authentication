@@ -17,7 +17,8 @@ export class JWT {
   verifyToken<T extends string | object>(
     token: string,
     verifyOptions?: jwt.VerifyOptions,
+    secret = process.env.JWT_SECRET,
   ) {
-    return jwt.verify(token, process.env.JWT_SECRET, verifyOptions) as T;
+    return jwt.verify(token, secret, verifyOptions) as T;
   }
 }
