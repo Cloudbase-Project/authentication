@@ -29,6 +29,19 @@ export class configService {
     return config;
   }
 
+  async toggleService(projectId: string, ownerId: string) {
+    const config = await this.configModel.findOne({
+      projectId: projectId,
+      owner: ownerId,
+    });
+    if (!config) {
+      throw new ApplicationException('invalid projectid', 400);
+    }
+    config.enabled = !config.enabled;
+    await config.save();
+    return config;
+  }
+
   async viewUsers(
     ownerId: string,
     projectId: string,

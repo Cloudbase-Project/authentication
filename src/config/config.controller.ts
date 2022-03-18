@@ -46,6 +46,7 @@ export class configController {
     );
   }
 
+  // internal route
   @Post('/')
   @HttpCode(201)
   createConfig(
@@ -59,5 +60,12 @@ export class configController {
     createConfigDTO: createConfigDTO,
   ) {
     return this.configService.createConfig(createConfigDTO);
+  }
+
+  @Post('/')
+  @HttpCode(200)
+  @UseGuards(OwnerGuard)
+  toggleService(@Param('projectId') projectId: string) {
+    return this.configService.toggleService(projectId, this.req.ownerId);
   }
 }
