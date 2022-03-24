@@ -62,7 +62,7 @@ export class configController {
     return this.configService.createConfig(createConfigDTO);
   }
 
-  @Post('/')
+  @Post('/:projectId')
   @HttpCode(200)
   @UseGuards(OwnerGuard)
   toggleService(@Param('projectId') projectId: string) {
